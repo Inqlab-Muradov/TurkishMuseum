@@ -11,17 +11,17 @@ import androidx.navigation.fragment.navArgs
 import com.inqlab.countries.adapter.MuseumAdapter
 import com.inqlab.countries.base.BaseFragment
 import com.inqlab.countries.databinding.FragmentMuseumBinding
+import com.inqlab.countries.viewModel.MuseumUiState
 import com.inqlab.countries.viewModel.MuseumViewModel
+import com.inqlab.countries.viewModel.UiState
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MuseumFragment : BaseFragment<FragmentMuseumBinding>(FragmentMuseumBinding::inflate){
 
     private val args : MuseumFragmentArgs by navArgs()
-
     private val viewModel by viewModels<MuseumViewModel> ()
     private val museumAdapter = MuseumAdapter()
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -31,14 +31,15 @@ class MuseumFragment : BaseFragment<FragmentMuseumBinding>(FragmentMuseumBinding
     }
 
     private fun observeData(){
-        viewModel.museumList.observe(viewLifecycleOwner){
-            museumAdapter.updateList(it)
-        }
-        viewModel.isEmpty.observe(viewLifecycleOwner){
-            if (it) binding.emptyTxt.text = "Hic bir muze yok!!"
-        }
-        viewModel.errorMessage.observe(viewLifecycleOwner){
-            Toast.makeText(context,it,Toast.LENGTH_SHORT).show()
+        viewModel.uiState.observe(viewLifecycleOwner){
+            when(it){
+                is MuseumUiState.MuseumList->{
+                    if (it.list.isNotEmpty()) museumAdapter.updateList(it.list) else binding.emptyTxt.text = "There is not any museum"
+                    binding.progressBarMuseum.visibility = View.INVISIBLE
+                }
+                is MuseumUiState.Error-> Toast.makeText(this.context, "${it.message}", Toast.LENGTH_SHORT).show()
+                is MuseumUiState.Loading-> binding.progressBarMuseum.visibility = View.VISIBLE
+            }
         }
     }
 }

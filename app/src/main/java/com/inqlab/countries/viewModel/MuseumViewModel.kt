@@ -11,6 +11,7 @@ import com.inqlab.countries.repository.CountryRepository
 import com.inqlab.countries.repository.NetworkResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -21,29 +22,32 @@ class MuseumViewModel @Inject constructor(
     val repository : CountryRepository
 ) : ViewModel() {
 
-    val museumList = MutableLiveData<List<DataX>>()
-    var isEmpty = MutableLiveData<Boolean>()
-    val errorMessage = MutableLiveData<String>()
-
+    val uiState = MutableLiveData<MuseumUiState>()
     fun getAllMuseum(city:String,district:String){
-       viewModelScope.launch {
-           val response = repository.getMuseums(city,district)
-           when(response){
-               is NetworkResponse.Success->{
-                   response.data?.data?.let {
-                      if (it.isNotEmpty()){
-                          museumList.value = it
-                      }else{
-                          isEmpty.value = true
-                      }
-                   }
-               }
-               is NetworkResponse.Error->{
-                   response.message?.let {
-                       errorMessage.value = it
-                   }
-               }
-           }
-       }
+        viewModelScope.launch {
+            repository.getMuseums(city,district).collectLatest {
+                when(it){
+                    is NetworkResponse.Success->{
+                        it.data?.data?.let {
+                            uiState.value = MuseumUiState.MuseumList(it)
+                        }
+                    }
+                    is NetworkResponse.Error->{
+                        it.message?.let {
+                            uiState.value = MuseumUiState.Error(it)
+                        }
+                    }
+                    is NetworkResponse.Loading->{
+                        uiState.value = MuseumUiState.Loading
+                    }
+                }
+            }
+        }
     }
+}
+
+sealed class MuseumUiState(){
+    data class MuseumList(val list:List<DataX>):MuseumUiState()
+    object Loading : MuseumUiState()
+    data class Error(val message:String):MuseumUiState()
 }

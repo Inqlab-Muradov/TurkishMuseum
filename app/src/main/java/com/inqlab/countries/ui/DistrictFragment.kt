@@ -10,6 +10,7 @@ import com.inqlab.countries.base.BaseFragment
 import com.inqlab.countries.adapter.DistrictAdapter
 import com.inqlab.countries.viewModel.DistrictViewModel
 import com.inqlab.countries.databinding.FragmentDistrictBinding
+import com.inqlab.countries.viewModel.UiState
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -30,15 +31,15 @@ class DistrictFragment : BaseFragment<FragmentDistrictBinding>(FragmentDistrictB
     }
 
     private fun observeData(){
-        viewModel.districtList.observe(viewLifecycleOwner){
-            districtAdapter.updateList(it)
-        }
-        viewModel.errorMessage.observe(viewLifecycleOwner){
-            Toast.makeText(context,it,Toast.LENGTH_SHORT).show()
-        }
-        viewModel.isEmpty.observe(viewLifecycleOwner){
-            if (it) binding.districtEmpty.text = "There is no any districts"
+        viewModel.districtUiState.observe(viewLifecycleOwner){
+            when(it){
+                is UiState.list->{
+                    districtAdapter.updateList(it.list)
+                    binding.progressBarDistrict.visibility = View.INVISIBLE
+                }
+                is UiState.errorMessage-> Toast.makeText(this.context,"${it.message}",Toast.LENGTH_SHORT).show()
+                is UiState.loading-> binding.progressBarDistrict.visibility = View.VISIBLE
+            }
         }
     }
-
 }

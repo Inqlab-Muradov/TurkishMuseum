@@ -9,6 +9,7 @@ import com.inqlab.countries.base.BaseFragment
 import com.inqlab.countries.adapter.CityAdapter
 import com.inqlab.countries.viewModel.CityViewModel
 import com.inqlab.countries.databinding.FragmentCityBinding
+import com.inqlab.countries.viewModel.UiState
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,12 +28,15 @@ class CityFragment : BaseFragment<FragmentCityBinding>(FragmentCityBinding::infl
     }
 
     private fun observeData(){
-        viewModel.cityList.observe(viewLifecycleOwner){
-            cityAdapter.updateList(it)
-        }
-        viewModel.errorMessage.observe(viewLifecycleOwner){
-            Toast.makeText(context,it,Toast.LENGTH_SHORT).show()
+        viewModel.cityUiState.observe(viewLifecycleOwner){
+            when(it){
+                is UiState.list->{
+                    cityAdapter.updateList(it.list)
+                    binding.progressBar.visibility = View.INVISIBLE
+                }
+                is UiState.loading->binding.progressBar.visibility = View.VISIBLE
+                is UiState.errorMessage-> Toast.makeText(this.context,"${it.message}",Toast.LENGTH_SHORT).show()
+            }
         }
     }
-
 }

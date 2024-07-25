@@ -38,4 +38,5 @@
             android:name="city"
             app:argType="string" />
     </fragment>
+
 </navigation>

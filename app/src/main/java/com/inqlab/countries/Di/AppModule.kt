@@ -1,7 +1,7 @@
 package com.inqlab.countries.Di
 
 import android.content.Context
-import com.chuckerteam.chucker.api.Chucker
+import androidx.room.Room
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.inqlab.countries.api.ApiKeyInterceptor
 import com.inqlab.countries.api.CityService
@@ -62,5 +62,6 @@ object AppModule {
             .build()
             .create(CityService::class.java)
     }
+
 
 }
